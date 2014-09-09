@@ -1,0 +1,177 @@
+package project_4_5;
+
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+
+/**
+Authors: Monsu Mathew, Andy Fox
+Purpose: This program demonstrates the concept of 'hashing', or assigning elements of a collection to a sequential structure.
+		 An input file contains prose with various Strings, containing letters, digits, and punctuation.
+		 The program then assigns a hash code for each of the Strings via two methods, sum of ASCII and Java default.
+		 Two output files are generated with the finalized hash tables of size 100 or 200 (based on user input).
+General Design: 
+				main - manages initialization, overall flow of the program, and file input
+				hashTable - generates the 100- or 200- row hash table utilizing each Hash object from the text prose
+				outputFile - creates the two output files demonstrating the two methodologies for hashing
+*/
+
+public class project_4_5 {
+	/**
+	 * Main function which runs the hashCreator application
+	 * 
+	 * @throws FileNotFoundException
+	 */
+	public static void main(String[] args) throws FileNotFoundException {
+		Scanner in = new Scanner (System.in);
+        File inputFile = new File("input.txt");
+        Scanner inFile = new Scanner(inputFile);
+		ArrayList<Hash> myHashArray = new ArrayList<Hash>();
+	        
+        int input = 0;
+        int input_num = 0;
+
+        boolean match = false;
+        
+        System.out.println("Please enter 1 to use array size 100, or 2 for array size 200");
+        do{
+            if (in.hasNextInt()){
+                input = in.nextInt();
+                if (input == 1 | input == 2){
+                    match = true;
+                    if (input == 1){
+                        input_num = 100;
+                    }else if (input == 2){
+                        input_num = 200;
+
+                    }
+                }else{
+                    System.out.println("Please enter either a 1 or a 0.");
+                }
+            }else{
+                System.out.println("Please enter either a 1 or a 0.");
+                in.next();
+            }
+            }while(!match);
+        
+        while(inFile.hasNext()){
+            String input_string = inFile.next();
+            
+            Hash myHash = new Hash(input_string);
+            myHash.setHashKeys(input_num);
+            myHashArray.add(myHash);
+        }
+        inFile.close();
+        
+        //the hash table is an array of arrayLists as opposed to a linked list for simplicity
+        ArrayList<String>[] buckets1 = (ArrayList<String>[]) new ArrayList[input_num];
+        ArrayList<String>[] buckets2 = (ArrayList<String>[]) new ArrayList[input_num];
+        hashTable(myHashArray, buckets1, buckets2);
+        outputFile(buckets1, buckets2, input_num);
+     
+        in.close();
+        
+        System.out.println("Hash tables successfully printed to two output files.");
+	}
+	
+	/**
+	 * This method creates the two Hash Tables from the collection of Hash objects that have been generated from the text file's Strings
+	 * @param myHashArray: ArrayList of Hash objects
+	 * @param buckets1: Array of size 100 or 200 (user input), where each index corresponds to the Hash Key and each entry contains an ArrayList of Hash Values
+	 * 					determined via sum of ASCII method and using separate chaining
+	 * @param buckets2: Array of size 100 or 200 (user input), where each index corresponds to the Hash Key and each entry contains an ArrayList of Hash Values
+	 * 					determined via Java's hashcode() method and using separate chaining
+	 */
+	public static void hashTable(ArrayList<Hash> myHashArray, ArrayList<String> buckets1[], ArrayList<String> buckets2[]){
+		boolean found = false;
+        int k = 0;
+        
+        for(int i = 0; i < buckets1.length; i++){
+        	ArrayList<String> tempBucket = new ArrayList<String>();
+        	for(int j = 0; j < myHashArray.size(); j++){
+        		if(myHashArray.get(j).getHashKey1() == i){
+        			while(!found && k < tempBucket.size()){
+        				if(myHashArray.get(j).getHashValue().equals(tempBucket.get(k))){
+        					found = true;
+        				}
+        				k++;
+        			}
+        			if(!found){tempBucket.add(myHashArray.get(j).getHashValue());}
+        			found = false;
+        			k = 0;
+        		}
+        	}
+        	if(tempBucket.size() == 0){
+        		tempBucket.add("EMPTY LINE...");
+        	}
+        	buckets1[i] = tempBucket;
+        }
+        
+        for(int i = 0; i < buckets2.length; i++){
+        	ArrayList<String> tempBucket = new ArrayList<String>();
+        	for(int j = 0; j < myHashArray.size(); j++){
+        		if(myHashArray.get(j).getHashKey2() == i){
+        			while(!found && k < tempBucket.size()){
+        				if(myHashArray.get(j).getHashValue().equals(tempBucket.get(k))){
+        					found = true;
+        				}
+        				k++;
+        			}
+        			if(!found){tempBucket.add(myHashArray.get(j).getHashValue());}
+        			found = false;
+        			k = 0;
+        		}
+        	}
+        	if(tempBucket.size() == 0){
+        		tempBucket.add("EMPTY LINE...");
+        	}
+        	buckets2[i] = tempBucket;
+        }
+	}
+	
+	/**
+	 * This method writes the 2 hash tables to separate output files
+	 * @param buckets1: hash table from method 1 (ASCII sum)
+	 * @param buckets2: hash table from method 2 (Java)
+	 * @param input_num: defines the index of hash keys (number of rows) based on user-input of 100 or 200
+	 * @throws FileNotFoundException
+	 */
+	public static void outputFile(ArrayList<String> buckets1[], ArrayList<String> buckets2[], int input_num) throws FileNotFoundException{
+        PrintWriter out1 = new PrintWriter("output1.txt");
+        PrintWriter out2 = new PrintWriter("output2.txt"); 
+		int output_line1 = 0;
+        int output_line2 = 0;
+
+        for(int i = 0;i<buckets1.length;i++){
+            output_line1 = i+1;
+            out1.printf("%d ", output_line1);
+
+            for(int j = 0;j<buckets1[i].size();j++){
+                out1.printf("%s", buckets1[i].get(j));
+                if (j!= buckets1[i].size()-1){
+                    out1.printf(", ");
+                }
+            }
+            out1.println();
+            out1.println();
+
+        }
+        for(int i = 0;i<buckets2.length;i++){
+            output_line2 = i+1;
+            out2.printf("%d ", output_line2);
+
+            for(int j = 0;j<buckets2[i].size();j++){
+                out2.printf("%s", buckets2[i].get(j));
+                if (j!= buckets2[i].size()-1){
+                    out2.printf(", ");
+                }
+            }
+            out2.println();
+            out2.println();
+        }
+        out1.close();
+        out2.close();
+	}
+}
